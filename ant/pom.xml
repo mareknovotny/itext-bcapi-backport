@@ -70,16 +70,19 @@
 			<groupId>bouncycastle</groupId>
 			<artifactId>bcmail-bc.jdk</artifactId>
 			<version>bc.version</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>bouncycastle</groupId>
 			<artifactId>bcprov-bc.jdk</artifactId>
 			<version>bc.version</version>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>bouncycastle</groupId>
-			<artifactId>bctsp-bc.jdk</artifactId>
+ 			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcpkix-bc.jdk</artifactId>
 			<version>bc.version</version>
+			<optional>true</optional>
 		</dependency>
 	</dependencies>
 	<build>

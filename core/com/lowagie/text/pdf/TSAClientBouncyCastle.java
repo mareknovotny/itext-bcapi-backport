@@ -53,6 +53,7 @@ import java.io.*;
 import java.math.*;
 import java.net.*;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.cmp.*;
 import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.tsp.*;
@@ -77,13 +78,14 @@ public class TSAClientBouncyCastle implements TSAClient {
     protected String tsaPassword;
     /** Estimate of the received time stamp token */
     protected int tokSzEstimate;
-    
+    protected String digestAlgorithm;
+    private static final String defaultDigestAlgorithm = "SHA-1";
     /**
      * Creates an instance of a TSAClient that will use BouncyCastle.
      * @param url String - Time Stamp Authority URL (i.e. "http://tsatest1.digistamp.com/TSA")
      */
     public TSAClientBouncyCastle(String url) {
-        this(url, null, null, 4096);
+        this(url, null, null, 4096, defaultDigestAlgorithm);
     }
     
     /**
@@ -93,7 +95,7 @@ public class TSAClientBouncyCastle implements TSAClient {
      * @param password String - password
      */
     public TSAClientBouncyCastle(String url, String username, String password) {
-        this(url, username, password, 4096);
+        this(url, username, password, 4096, defaultDigestAlgorithm);
     }
     
     /**
@@ -106,11 +108,12 @@ public class TSAClientBouncyCastle implements TSAClient {
      * @param password String - password
      * @param tokSzEstimate int - estimated size of received time stamp token (DER encoded)
      */
-    public TSAClientBouncyCastle(String url, String username, String password, int tokSzEstimate) {
+    public TSAClientBouncyCastle(String url, String username, String password, int tokSzEstimate, String digestAlgorithm) {
         this.tsaURL       = url;
         this.tsaUsername  = username;
         this.tsaPassword  = password;
         this.tokSzEstimate = tokSzEstimate;
+        this.digestAlgorithm = digestAlgorithm;
     }
     
     /**
@@ -121,7 +124,10 @@ public class TSAClientBouncyCastle implements TSAClient {
     public int getTokenSizeEstimate() {
         return tokSzEstimate;
     }
-    
+
+    public String getDigestAlgorithm() {
+        return digestAlgorithm;
+    }
     /**
      * Get RFC 3161 timeStampToken.
      * Method may return null indicating that timestamp should be skipped.
@@ -146,7 +152,8 @@ public class TSAClientBouncyCastle implements TSAClient {
             tsqGenerator.setCertReq(true);
             // tsqGenerator.setReqPolicy("1.3.6.1.4.1.601.10.3.1");
             BigInteger nonce = BigInteger.valueOf(System.currentTimeMillis());
-            TimeStampRequest request = tsqGenerator.generate(X509ObjectIdentifiers.id_SHA1.getId() , imprint, nonce);
+            //TimeStampRequest request = tsqGenerator.generate(X509ObjectIdentifiers.id_SHA1.getId() , imprint, nonce);
+            TimeStampRequest request = tsqGenerator.generate(new ASN1ObjectIdentifier(PdfPKCS7.getAllowedDigests(getDigestAlgorithm())), imprint, nonce);
             byte[] requestBytes = request.getEncoded();
             
             // Call the communications layer

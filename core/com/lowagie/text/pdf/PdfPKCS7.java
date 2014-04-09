@@ -62,12 +62,14 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CRL;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -75,43 +77,45 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1OutputStream;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
+import org.bouncycastle.asn1.ASN1String;
 import org.bouncycastle.asn1.ASN1TaggedObject;
 import org.bouncycastle.asn1.DEREnumerated;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERNull;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DEROutputStream;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERSet;
-import org.bouncycastle.asn1.DERString;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.DERUTCTime;
-import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.asn1.cms.Attribute;
+import org.bouncycastle.asn1.cms.AttributeTable;
+import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.ocsp.BasicOCSPResponse;
 import org.bouncycastle.asn1.ocsp.OCSPObjectIdentifiers;
-import org.bouncycastle.jce.provider.X509CRLParser;
-import org.bouncycastle.jce.provider.X509CertParser;
-import com.lowagie.text.ExceptionConverter;
-import java.security.cert.CertificateParsingException;
-import java.util.Date;
-import org.bouncycastle.asn1.ASN1OctetString;
-import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.tsp.MessageImprint;
-import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.ocsp.BasicOCSPResp;
-import org.bouncycastle.ocsp.CertificateID;
-import org.bouncycastle.ocsp.SingleResp;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.bouncycastle.cert.ocsp.BasicOCSPResp;
+import org.bouncycastle.cert.ocsp.SingleResp;
+import org.bouncycastle.jce.provider.X509CRLParser;
+import org.bouncycastle.jce.provider.X509CertParser;
+import org.bouncycastle.cert.ocsp.CertificateID;
+import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder;
+import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.tsp.TimeStampToken;
+
+import com.lowagie.text.ExceptionConverter;
 
 /**
  * This class does all the processing related to signing and verifying a PKCS#7
@@ -169,9 +173,9 @@ public class PdfPKCS7 {
     
     private TimeStampToken timeStampToken;
     
-    private static final HashMap digestNames = new HashMap();
-    private static final HashMap algorithmNames = new HashMap();
-    private static final HashMap allowedDigests = new HashMap();
+    private static final HashMap<String,String> digestNames = new HashMap<String,String>();
+    private static final HashMap<String,String> algorithmNames = new HashMap<String,String>();
+    private static final HashMap<String,String> allowedDigests = new HashMap<String,String>();
     
     static {
         digestNames.put("1.2.840.113549.2.5", "MD5");
@@ -268,6 +272,10 @@ public class PdfPKCS7 {
             return ret;
     }
     
+    public static String getAllowedDigests(String name) {
+        return allowedDigests.get(name.toUpperCase());
+    }
+    
     /**
      * Gets the timestamp token if there is one.
      * @return the timestamp token or null
@@ -335,7 +343,7 @@ public class PdfPKCS7 {
         boolean ret = false;
         while (true) {
             if ((seq.getObjectAt(0) instanceof DERObjectIdentifier) 
-                && ((DERObjectIdentifier)seq.getObjectAt(0)).getId().equals(OCSPObjectIdentifiers.id_pkix_ocsp_basic.getId())) {
+                && ((ASN1ObjectIdentifier)seq.getObjectAt(0)).getId().equals(OCSPObjectIdentifiers.id_pkix_ocsp_basic.getId())) {
                 break;
             }
             ret = true;
@@ -379,7 +387,7 @@ public class PdfPKCS7 {
             //
             // Basic checks to make sure it's a PKCS#7 SignedData Object
             //
-            DERObject pkcs;
+            ASN1Primitive pkcs;
 
             try {
                 pkcs = din.readObject();
@@ -464,7 +472,7 @@ public class PdfPKCS7 {
             if (signerInfo.getObjectAt(next) instanceof ASN1TaggedObject) {
                 ASN1TaggedObject tagsig = (ASN1TaggedObject)signerInfo.getObjectAt(next);
                 ASN1Set sseq = ASN1Set.getInstance(tagsig, false);
-                sigAttr = sseq.getEncoded(ASN1Encodable.DER);
+                sigAttr = sseq.getEncoded(ASN1Encoding.DER);
 
                 for (int k = 0; k < sseq.size(); ++k) {
                     ASN1Sequence seq2 = (ASN1Sequence)sseq.getObjectAt(k);
@@ -898,7 +906,7 @@ public class PdfPKCS7 {
                     if (!keystore.isCertificateEntry(alias))
                         continue;
                     X509Certificate certStoreX509 = (X509Certificate)keystore.getCertificate(alias);
-                    if (ocsp.verify(certStoreX509.getPublicKey(), provider))
+                    if (ocsp.isSignatureValid(new JcaContentVerifierProviderBuilder().setProvider(provider).build(certStoreX509.getPublicKey())))
                         return true;
                 }
                 catch (Exception ex) {
@@ -949,7 +957,7 @@ public class PdfPKCS7 {
      */
     public static String getOCSPURL(X509Certificate certificate) throws CertificateParsingException {
         try {
-            DERObject obj = getExtensionValue(certificate, X509Extensions.AuthorityInfoAccess.getId());
+        	ASN1Primitive obj = getExtensionValue(certificate, Extension.authorityInfoAccess.getId());
             if (obj == null) {
                 return null;
             }
@@ -960,8 +968,12 @@ public class PdfPKCS7 {
                 if ( AccessDescription.size() != 2 ) {
                     continue;
                 } else {
-                    if ((AccessDescription.getObjectAt(0) instanceof DERObjectIdentifier) && ((DERObjectIdentifier)AccessDescription.getObjectAt(0)).getId().equals("1.3.6.1.5.5.7.48.1")) {
-                        String AccessLocation =  getStringFromGeneralName((DERObject)AccessDescription.getObjectAt(1));
+					if (AccessDescription.getObjectAt(0) instanceof ASN1ObjectIdentifier
+							&& ((ASN1ObjectIdentifier) AccessDescription
+									.getObjectAt(0)).getId().equals(
+									"1.3.6.1.5.5.7.48.1")) {
+						String AccessLocation = getStringFromGeneralName((ASN1Primitive) AccessDescription
+								.getObjectAt(1));
                         if ( AccessLocation == null ) {
                             return "" ;
                         } else {
@@ -991,7 +1003,7 @@ public class PdfPKCS7 {
             CertificateID cid = sr.getCertID();
             X509Certificate sigcer = getSigningCertificate();
             X509Certificate isscer = cs[1];
-            CertificateID tis = new CertificateID(CertificateID.HASH_SHA1, isscer, sigcer.getSerialNumber());
+            CertificateID tis = new CertificateID(new JcaDigestCalculatorProviderBuilder().build().get(CertificateID.HASH_SHA1), new JcaX509CertificateHolder(isscer), sigcer.getSerialNumber());
             return tis.equals(cid);
         }
         catch (Exception ex) {
@@ -999,7 +1011,7 @@ public class PdfPKCS7 {
         return false;
     }
     
-    private static DERObject getExtensionValue(X509Certificate cert, String oid) throws IOException {
+    private static ASN1Primitive getExtensionValue(X509Certificate cert, String oid) throws IOException {
         byte[] bytes = cert.getExtensionValue(oid);
         if (bytes == null) {
             return null;
@@ -1010,7 +1022,7 @@ public class PdfPKCS7 {
         return aIn.readObject();
     }
     
-    private static String getStringFromGeneralName(DERObject names) throws IOException {
+    private static String getStringFromGeneralName(ASN1Primitive names) throws IOException {
         DERTaggedObject taggedObject = (DERTaggedObject) names ;
         return new String(ASN1OctetString.getInstance(taggedObject, false).getOctets(), "ISO-8859-1");
     }
@@ -1020,11 +1032,11 @@ public class PdfPKCS7 {
      * @param enc a TBSCertificate in a byte array
      * @return a DERObject
      */
-    private static DERObject getIssuer(byte[] enc) {
+    private static ASN1Primitive getIssuer(byte[] enc) {
         try {
             ASN1InputStream in = new ASN1InputStream(new ByteArrayInputStream(enc));
             ASN1Sequence seq = (ASN1Sequence)in.readObject();
-            return (DERObject)seq.getObjectAt(seq.getObjectAt(0) instanceof DERTaggedObject ? 3 : 2);
+            return (ASN1Primitive)seq.getObjectAt(seq.getObjectAt(0) instanceof DERTaggedObject ? 3 : 2);
         }
         catch (IOException e) {
             throw new ExceptionConverter(e);
@@ -1036,11 +1048,11 @@ public class PdfPKCS7 {
      * @param enc A TBSCertificate in a byte array
      * @return a DERObject
      */
-    private static DERObject getSubject(byte[] enc) {
+    private static ASN1Primitive getSubject(byte[] enc) {
         try {
             ASN1InputStream in = new ASN1InputStream(new ByteArrayInputStream(enc));
             ASN1Sequence seq = (ASN1Sequence)in.readObject();
-            return (DERObject)seq.getObjectAt(seq.getObjectAt(0) instanceof DERTaggedObject ? 5 : 4);
+            return (ASN1Primitive)seq.getObjectAt(seq.getObjectAt(0) instanceof DERTaggedObject ? 5 : 4);
         }
         catch (IOException e) {
             throw new ExceptionConverter(e);
@@ -1340,7 +1352,7 @@ public class PdfPKCS7 {
      */    
     public byte[] getAuthenticatedAttributeBytes(byte secondDigest[], Calendar signingTime, byte[] ocsp) {
         try {
-            return getAuthenticatedAttributeSet(secondDigest, signingTime, ocsp).getEncoded(ASN1Encodable.DER);
+            return getAuthenticatedAttributeSet(secondDigest, signingTime, ocsp).getEncoded(ASN1Encoding.DER);
         }
         catch (Exception e) {
             throw new ExceptionConverter(e);
@@ -1575,7 +1587,7 @@ public class PdfPKCS7 {
                         vs = new ArrayList();
                         values.put(id, vs);
                     }
-                    vs.add(((DERString)s.getObjectAt(1)).getString());
+                    vs.add(((ASN1String)s.getObjectAt(1)).getString());
                 }
             }
         }

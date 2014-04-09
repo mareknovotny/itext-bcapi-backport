@@ -99,7 +99,12 @@ public class RandomAccessFileOrArray implements DataInput {
                 }
             }
             else {
-                InputStream is = BaseFont.getResourceStream(filename);
+            	InputStream is;
+            	if( filename.equals("-"))
+            		is = System.in;
+            	else
+            		is = BaseFont.getResourceStream(filename);
+            	
                 if (is == null)
                     throw new IOException(filename + " not found as file or resource.");
                 try {

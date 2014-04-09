@@ -142,18 +142,28 @@
 				<include name="itext-${releasenumber}-javadoc.jar" />
 			</fileset>
 		</jar>
-		<replace file="${itext.maven}/pom.xml" token="artifactId>itext" value="artifactId>itext-rtf"/>
-		<replace file="${itext.maven}/pom.xml" token="PDF library" value="PDF library (rtf package)"/>
+		<copy file="${itext.src}/ant/pom.xml" tofile="${itext.maven}/rtf-pom.xml" overwrite="yes"/>
+		<replace file="${itext.maven}/rtf-pom.xml" token="releasenumber" value="${releasenumber}"/>
+		<replace file="${itext.maven}/rtf-pom.xml" token="bc.jdk" value="${bc.jdk}"/>
+		<replace file="${itext.maven}/rtf-pom.xml" token="bc.version" value="${bc.version}"/>
+		<replace file="${itext.maven}/rtf-pom.xml" token="artifactId>itext" value="artifactId>itext-rtf"/>
+		<replace file="${itext.maven}/rtf-pom.xml" token="PDF library" value="PDF library (rtf package)"/>
+		<replace file="${itext.maven}/rtf-pom.xml" token="releasenumber" value="${releasenumber}"/>
 		<jar destfile="${itext.maven}/itext-rtf-${releasenumber}-bundle.jar">
 			<fileset dir="${itext.maven}">
-				<include name="pom.xml" />
+				<include name="rtf-pom.xml" />
 				<include name="itext-rtf-${releasenumber}.jar" />
 			</fileset>
 		</jar>
-		<replace file="${itext.maven}/pom.xml" token="rtf" value="rups"/>
+		<copy file="${itext.src}/ant/pom.xml" tofile="${itext.maven}/rups-pom.xml" overwrite="yes"/>
+		<replace file="${itext.maven}/rups-pom.xml" token="releasenumber" value="${releasenumber}"/>
+		<replace file="${itext.maven}/rups-pom.xml" token="bc.jdk" value="${bc.jdk}"/>
+		<replace file="${itext.maven}/rups-pom.xml" token="bc.version" value="${bc.version}"/>
+		<replace file="${itext.maven}/rups-pom.xml" token="rtf" value="rups"/>
+		<replace file="${itext.maven}/rups-pom.xml" token="releasenumber" value="${releasenumber}"/>
 		<jar destfile="${itext.maven}/itext-rups-${releasenumber}-bundle.jar">
 			<fileset dir="${itext.maven}">
-				<include name="pom.xml" />
+				<include name="rups-pom.xml" />
 				<include name="itext-rups-${releasenumber}.jar" />
 			</fileset>
 		</jar>
@@ -182,8 +192,8 @@
 	<target name="unsign.bctsp">
         <mkdir dir="${itext.jnlp}" />
     	<mkdir dir="${itext.bin.temp}" />
-    	<unjar src="${itext.lib}/bctsp-${bc.jdk}-${bc.version}.jar" dest="${itext.bin.temp}" />
-    	<jar destfile="${itext.jnlp}/bctsp-${bc.jdk}-${bc.version}.jar" basedir="${itext.bin.temp}" includes="**/*.class" />
+    	<unjar src="${itext.lib}/${lib.bctsp}" dest="${itext.bin.temp}" />
+    	<jar destfile="${itext.jnlp}/${lib.bctsp}" basedir="${itext.bin.temp}" includes="**/*.class" />
     	<delete dir="${itext.bin.temp}" />
 	</target>
 
