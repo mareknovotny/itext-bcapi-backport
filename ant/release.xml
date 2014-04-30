@@ -158,8 +158,9 @@
 		<copy file="${itext.src}/ant/pom.xml" tofile="${itext.maven}/rups-pom.xml" overwrite="yes"/>
 		<replace file="${itext.maven}/rups-pom.xml" token="releasenumber" value="${releasenumber}"/>
 		<replace file="${itext.maven}/rups-pom.xml" token="bc.jdk" value="${bc.jdk}"/>
-		<replace file="${itext.maven}/rups-pom.xml" token="bc.version" value="${bc.version}"/>
-		<replace file="${itext.maven}/rups-pom.xml" token="rtf" value="rups"/>
+		<replace file="${itext.maven}/rups-pom.xml" token="bc.version" value="${bc.version}"/>		
+		<replace file="${itext.maven}/rups-pom.xml" token="artifactId>itext" value="artifactId>itext-rups"/>
+		<replace file="${itext.maven}/rups-pom.xml" token="PDF library" value="PDF library (rups package)"/>
 		<replace file="${itext.maven}/rups-pom.xml" token="releasenumber" value="${releasenumber}"/>
 		<jar destfile="${itext.maven}/itext-rups-${releasenumber}-bundle.jar">
 			<fileset dir="${itext.maven}">
