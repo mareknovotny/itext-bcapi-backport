@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="core"/>
+	<classpathentry kind="src" path="rtf"/>
+	<classpathentry kind="src" path="rups"/>
+	<classpathentry kind="src" path="toolbox"/>
+	<classpathentry kind="lib" path="lib/bcmail-jdk15on-1.48.jar"/>
+	<classpathentry kind="lib" path="lib/bcpg-jdk15on-1.48.jar"/>
+	<classpathentry kind="lib" path="lib/bcpkix-jdk15on-1.48.jar"/>
+	<classpathentry kind="lib" path="lib/bcprov-jdk15on-1.48.jar"/>
+	<classpathentry kind="lib" path="lib/crimson.jar"/>
+	<classpathentry kind="lib" path="lib/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="lib/jcommon.jar"/>
+	<classpathentry kind="lib" path="lib/jfreechart.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.4.jar"/>
+	<classpathentry kind="lib" path="lib/pdf-renderer.jar"/>
+	<classpathentry kind="lib" path="lib/servlet.jar"/>
+	<classpathentry kind="output" path="build/bin"/>
+</classpath>
