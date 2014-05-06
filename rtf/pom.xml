@@ -4,8 +4,8 @@
 	<groupId>org.jboss.itext</groupId>
 	<artifactId>itext-rtf</artifactId>
 	<version>2.1.7-redhat-1</version>
-	<name>iText, a Free Java-PDF library</name>
-	<description>iText, a free Java-PDF library</description>
+	<name>iText RTF, a Free Java-PDF library</name>
+	<description>iText, a free Java-PDF library (rtf package)</description>
 	<url>http://www.lowagie.com/iText/</url>
 	<mailingLists>
 		<mailingList>
