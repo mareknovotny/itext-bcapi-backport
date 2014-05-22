@@ -84,7 +84,7 @@
       <dependency>
          <groupId>org.jboss.itext</groupId>
          <artifactId>itext</artifactId>
-         <version>2.1.7-redhat-1</version>
+         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.swinglabs</groupId>
@@ -133,6 +133,17 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3</version>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Version>${project.version}</Version>
+						</manifestEntries>						
+					</archive>
+				</configuration>
+			</plugin>			
 		</plugins>
 	</build>
 </project>
